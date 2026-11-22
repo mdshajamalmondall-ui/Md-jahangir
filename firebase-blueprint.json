@@ -1,0 +1,125 @@
+{
+  "entities": {
+    "UserPreference": {
+      "title": "UserPreference",
+      "description": "User-scoped Lumina gallery theme and layout preferences synced across devices.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase user UID."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name from Google Sign-In."
+        },
+        "themePreset": {
+          "type": "string",
+          "enum": ["OBSIDIAN_NEON", "TERRACOTTA_WARM", "AURORA_GLASS", "SAKURA_MIST", "SYSTEM_DYNAMIC"],
+          "description": "Selected animated gallery theme preset."
+        },
+        "darkModeEnabled": {
+          "type": "boolean",
+          "description": "Whether dark appearance is enabled."
+        },
+        "gridColumns": {
+          "type": "integer",
+          "description": "Number of columns in the photo grid (2 to 4)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when preferences were created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when preferences were updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["userId", "displayName", "themePreset", "darkModeEnabled", "gridColumns", "createdAt", "updatedAt"]
+    },
+    "CloudFavorite": {
+      "title": "CloudFavorite",
+      "description": "User-scoped favorite photo metadata record synced in Firestore.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase user UID."
+        },
+        "photoKey": {
+          "type": "string",
+          "description": "Stable identifier for the photo (Drive file ID, local URI, or curated sample key)."
+        },
+        "title": {
+          "type": "string",
+          "description": "Photo title or filename."
+        },
+        "sourceType": {
+          "type": "string",
+          "enum": ["DRIVE", "DEVICE", "CURATED", "EDITED"],
+          "description": "Origin source of the favorited photo."
+        },
+        "driveFileId": {
+          "type": "string",
+          "description": "Optional Google Drive file ID if backed by Drive."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when favorited (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["userId", "photoKey", "title", "sourceType", "createdAt"]
+    },
+    "CloudAlbum": {
+      "title": "CloudAlbum",
+      "description": "User-scoped custom album definition synced across devices.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase user UID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Album display name."
+        },
+        "accentHex": {
+          "type": "string",
+          "description": "Hex color string for album badge."
+        },
+        "photoKeys": {
+          "type": "array",
+          "description": "Bounded list of photo keys belonging to this album (max 100)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when album was created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when album was updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["userId", "name", "accentHex", "photoKeys", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserPreference" },
+      "description": "Per-user Lumina gallery preferences and profile metadata."
+    },
+    "/users/{userId}/cloudFavorites/{favoriteId}": {
+      "schema": { "$ref": "#/entities/CloudFavorite" },
+      "description": "User-scoped favorited photo references including Google Drive items."
+    },
+    "/users/{userId}/cloudAlbums/{albumId}": {
+      "schema": { "$ref": "#/entities/CloudAlbum" },
+      "description": "User-scoped custom gallery albums."
+    }
+  }
+}

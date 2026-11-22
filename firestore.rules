@@ -1,0 +1,122 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidThemePreset(preset) {
+      return preset in ['OBSIDIAN_NEON', 'TERRACOTTA_WARM', 'AURORA_GLASS', 'SAKURA_MIST', 'SYSTEM_DYNAMIC'];
+    }
+
+    function isValidSourceType(sourceType) {
+      return sourceType in ['DRIVE', 'DEVICE', 'CURATED', 'EDITED'];
+    }
+
+    function isValidUserPreference(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.themePreset is string && isValidThemePreset(data.themePreset) &&
+             data.darkModeEnabled is bool &&
+             data.gridColumns is int && data.gridColumns >= 2 && data.gridColumns <= 4 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidCloudFavorite(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.photoKey is string && data.photoKey.size() >= 1 && data.photoKey.size() <= 500 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+             data.sourceType is string && isValidSourceType(data.sourceType) &&
+             (!('driveFileId' in data) || (data.driveFileId is string && data.driveFileId.size() <= 128)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidCloudAlbum(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 60 &&
+             data.accentHex is string && data.accentHex.size() >= 4 && data.accentHex.size() <= 16 &&
+             data.photoKeys is list && data.photoKeys.size() <= 100 &&
+             (data.photoKeys.size() == 0 || data.photoKeys[0] is string) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'themePreset', 'darkModeEnabled', 'gridColumns', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'themePreset', 'darkModeEnabled', 'gridColumns', 'createdAt', 'updatedAt']) &&
+                       isValidUserPreference(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidUserPreference(incoming(), userId) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'themePreset', 'darkModeEnabled', 'gridColumns', 'updatedAt']);
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /cloudFavorites/{favoriteId} {
+        allow get: if isOwner(userId) && isValidId(favoriteId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(favoriteId) &&
+                         incoming().keys().hasAll(['userId', 'photoKey', 'title', 'sourceType', 'createdAt']) &&
+                         incoming().keys().hasOnly(['userId', 'photoKey', 'title', 'sourceType', 'driveFileId', 'createdAt']) &&
+                         isValidCloudFavorite(incoming(), userId);
+
+        allow update: if false;
+        allow delete: if isOwner(userId) && isValidId(favoriteId);
+      }
+
+      match /cloudAlbums/{albumId} {
+        allow get: if isOwner(userId) && isValidId(albumId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(albumId) &&
+                         incoming().keys().hasAll(['userId', 'name', 'accentHex', 'photoKeys', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'name', 'accentHex', 'photoKeys', 'createdAt', 'updatedAt']) &&
+                         isValidCloudAlbum(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(albumId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidCloudAlbum(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'accentHex', 'photoKeys', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(albumId);
+      }
+    }
+  }
+}

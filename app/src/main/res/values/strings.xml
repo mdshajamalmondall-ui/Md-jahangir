@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Lumina</string>
+    <string name="nav_photos">Photos</string>
+    <string name="nav_albums">Albums</string>
+    <string name="nav_drive">Drive</string>
+    <string name="action_import_photos">Import Photos</string>
+    <string name="action_link_folder">Link Folder</string>
+    <string name="action_theme_studio">Theme Studio</string>
+    <string name="action_slideshow">Slideshow</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_save">Save</string>
+    <string name="action_sign_in_google">Sign in with Google</string>
+    <string name="action_connect_drive">Connect Google Drive</string>
+    <string name="action_sign_out">Sign Out</string>
+    <string name="search_photos_hint">Search photos, tags, albums…</string>
+    <string name="cd_back">Navigate back</string>
+    <string name="cd_favorite">Toggle favorite</string>
+    <string name="cd_theme_studio">Open Theme Studio</string>
+    <string name="cd_account">Account</string>
+    <string name="cd_compare_original">Hold to compare original</string>
+</resources>

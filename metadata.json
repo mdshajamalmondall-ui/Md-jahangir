@@ -1,0 +1,6 @@
+{
+  "name": "Lumina",
+  "description": "Animated themed Android gallery app with built-in photo editor, Google Sign-In, and Google Drive photo library integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
